@@ -42,8 +42,8 @@ Pre-compiled standalone binaries are available on the [GitHub Releases](https://
 | Platform | Architecture | Binary Package |
 |---|---|---|
 | **Linux** | `amd64` (x86_64) | `sing-box-redact-v*-linux-amd64.tar.gz` |
-| **Linux** | `arm64` (aarch64 / Raspberry Pi) | `sing-box-redact-v*-linux-arm64.tar.gz` |
-| **macOS** | `arm64` (Apple Silicon M1/M2/M3/M4) | `sing-box-redact-v*-darwin-arm64.tar.gz` |
+| **Linux** | `arm64` (aarch64) | `sing-box-redact-v*-linux-arm64.tar.gz` |
+| **macOS** | `arm64` (Apple Silicon) | `sing-box-redact-v*-darwin-arm64.tar.gz` |
 | **macOS** | `amd64` (Intel x86_64) | `sing-box-redact-v*-darwin-amd64.tar.gz` |
 | **Windows** | `amd64` (x86_64) | `sing-box-redact-v*-windows-amd64.zip` |
 | **Windows** | `arm64` (ARM64) | `sing-box-redact-v*-windows-arm64.zip` |
@@ -259,7 +259,7 @@ CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o dist/sing-box-redact ./cmd/
 # Windows (x86_64)
 CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o dist/sing-box-redact.exe ./cmd/sing-box-redact
 
-# macOS (Apple Silicon M1/M2/M3/M4)
+# macOS (Apple Silicon)
 CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o dist/sing-box-redact-darwin-arm64 ./cmd/sing-box-redact
 
 # macOS (Intel x86_64)
@@ -268,7 +268,7 @@ CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o di
 # Linux (x86_64)
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o dist/sing-box-redact-linux-amd64 ./cmd/sing-box-redact
 
-# Linux (ARM64 / Raspberry Pi)
+# Linux (ARM64)
 CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o dist/sing-box-redact-linux-arm64 ./cmd/sing-box-redact
 ```
 
