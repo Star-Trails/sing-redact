@@ -1,198 +1,187 @@
 # sing-box-redact
 
-`sing-box-redact` is a Windows-native CLI that performs deterministic, structure-aware, local redaction of sing-box JSON configurations. It produces readable sanitized JSON for ChatGPT, Claude, Gemini, GitHub issues, technical forums, or another person helping with troubleshooting.
+`sing-box-redact` is a cross-platform CLI (Linux, macOS, Windows) that performs deterministic, structure-aware, local redaction of sing-box JSON configurations. It produces clean, sanitized JSON suitable for sharing with ChatGPT, Claude, Gemini, GitHub issues, technical forums, or colleagues for troubleshooting.
 
 **sing-box-redact is an independent community tool and is not affiliated with or endorsed by SagerNet or the sing-box project.**
 
+---
+
 ## What it does
 
-```powershell
-sing-box-redact.exe C:\path\to\config.json
+```bash
+# Linux / macOS
+sing-box-redact config.json
+
+# Windows
+sing-box-redact.exe config.json
 ```
 
-This creates, without changing the original file:
+This creates, without modifying the original configuration:
 
 ```text
-C:\path\to\config.redacted.json
+config.redacted.json
 ```
 
 The executable:
 
-- runs locally and does not upload configuration data;
-- has no telemetry;
-- embeds its jq policy and uses [`github.com/itchyny/gojq`](https://github.com/itchyny/gojq), so system `jq` is not required;
-- accepts the JSONC comments and trailing commas used by sing-box;
-- preserves object key order, array order, value types, ports, tags, and internal references;
-- writes UTF-8 JSON with two-space indentation and a newline at EOF;
-- writes through a synced temporary file and atomically commits or replaces the target;
-- adds a second pure-Go residual-secret audit before file output.
+- **100% Offline & Private**: Runs entirely locally and transmits no configuration content over the network.
+- **Zero Telemetry**: No tracking, phone-home, or analytics.
+- **Embedded jq Engine**: Embeds its redaction policy with [`github.com/itchyny/gojq`](https://github.com/itchyny/gojq); no system `jq` installation required.
+- **Extended JSON Support**: Accepts JSONC comments (`//`, `/* */`), hash comments (`#`), and trailing commas used by sing-box.
+- **Structure & Graph Preservation**: Preserves object key ordering, array ordering, value types, ports, tags, ALPN, multiplexing, and routing graph references.
+- **Deterministic Placeholder Mapping**: Replaces endpoints and identities with stable, RFC-reserved documentation values (`redacted.example`, `192.0.2.1`, etc.).
+- **Atomic File Writing**: Writes via a synced temporary file with platform-native atomic replacement (`MoveFileExW` on Windows, POSIX `os.Rename` on macOS/Linux).
+- **Defense-in-Depth Audit**: Performs a second-stage residual secret scan before writing to ensure nothing was missed.
 
-No Python, Node.js, Bash, MSYS2, WSL, or external jq installation is required at runtime. The release artifact is one Windows `.exe`.
+---
 
-## Threat model
+## Supported Platforms & Pre-built Binaries
 
-The tool reduces accidental disclosure of:
+Pre-compiled standalone binaries are available on the [GitHub Releases](https://github.com/Star-Trails/sing-box-redact/releases) page for:
 
-- authentication credentials and sessions;
-- private cryptographic material;
-- account and device identities;
-- private proxy, VPN, DNS, NTP, and control endpoints;
-- local filesystem and network details;
-- public configuration fingerprints in strict mode.
+| Platform | Architecture | Binary Package |
+|---|---|---|
+| **Linux** | `amd64` (x86_64) | `sing-box-redact-v*-linux-amd64.tar.gz` |
+| **Linux** | `arm64` (aarch64 / Raspberry Pi) | `sing-box-redact-v*-linux-arm64.tar.gz` |
+| **macOS** | `arm64` (Apple Silicon M1/M2/M3/M4) | `sing-box-redact-v*-darwin-arm64.tar.gz` |
+| **macOS** | `amd64` (Intel x86_64) | `sing-box-redact-v*-darwin-amd64.tar.gz` |
+| **Windows** | `amd64` (x86_64) | `sing-box-redact-v*-windows-amd64.zip` |
+| **Windows** | `arm64` (ARM64) | `sing-box-redact-v*-windows-arm64.zip` |
 
-It assumes the local Windows host and the resulting output location are trusted. It does not protect an input file already exposed through backups, shell history, malware, another process, or an unsafe destination. Review sanitized output before publishing it. Unknown future sing-box fields receive generic secret-key and content checks, but no finite policy can prove that arbitrary user-defined metadata is non-sensitive.
+No Python, Node.js, Bash, WSL, MSYS2, or external libraries required at runtime. Each release is a single standalone executable.
 
-## Why schema-aware redaction
+---
 
-Fields such as `server`, `key`, `path`, `name`, and `user` are ambiguous:
+## Installation
 
-- `outbounds[].server` is normally a remote endpoint;
-- `route.rules[].server` can be a DNS-server tag and must remain intact;
-- TLS `key` is private material;
-- `public_key` is intentionally visible in credentials/share and hidden in strict;
-- a transport or DoH `path` is diagnostic protocol structure;
-- `private_key_path` and a local rule-set `path` identify local files.
+### Linux & macOS
 
-The embedded jq program recursively classifies fields using JSON path, root section, parent object, parent `type`, field name, container name, and value type. Go then applies type-preserving deterministic replacements. The policy is readable at [`internal/redact/rules/redact.jq`](internal/redact/rules/redact.jq); the researched field inventory is in [`docs/redaction-policy.md`](docs/redaction-policy.md).
+Download the latest release for your architecture and place it in your `PATH`:
 
-## Supported sing-box version/schema snapshot
+```bash
+# Example for Linux (x86_64)
+curl -sL https://github.com/Star-Trails/sing-box-redact/releases/latest/download/sing-box-redact-v0.1.0-linux-amd64.tar.gz | tar -xz
+sudo mv sing-box-redact /usr/local/bin/
 
-Policy research target:
-
-- sing-box release line: **1.14.0 testing**
-- branch: `testing`
-- commit: [`df34f5068b961fe3390a61eb3e773ad9bf4d98e2`](https://github.com/SagerNet/sing-box/commit/df34f5068b961fe3390a61eb3e773ad9bf4d98e2)
-- policy/schema date: **2026-08-31**
-- schema: [`docs/schema.json` at that commit](https://github.com/SagerNet/sing-box/blob/df34f5068b961fe3390a61eb3e773ad9bf4d98e2/docs/schema.json)
-- official configuration docs: <https://sing-box.sagernet.org/configuration/>
-
-The testing source uses `github.com/sagernet/sing/common/json` from sing `v0.9.0-beta.4`. Its decoder accepts JSONC comments and trailing commas. This tool uses the pure-Go `hujson` parser from that same testing dependency graph, plus a string-aware hash-comment pass, before ordered generic decoding.
-
-Check the compiled snapshot:
-
-```powershell
-sing-box-redact.exe --version
+# Example for macOS (Apple Silicon)
+curl -sL https://github.com/Star-Trails/sing-box-redact/releases/latest/download/sing-box-redact-v0.1.0-darwin-arm64.tar.gz | tar -xz
+sudo mv sing-box-redact /usr/local/bin/
 ```
 
-## Modes
+### Windows
 
-### `credentials`
+1. Download `sing-box-redact-v*-windows-amd64.zip` from [Releases](https://github.com/Star-Trails/sing-box-redact/releases).
+2. Extract `sing-box-redact.exe` to any folder (e.g. `C:\Tools\`).
+3. Add that folder to your User `PATH` or run it directly.
 
-Use when only direct authentication material should be hidden, for example trusted internal troubleshooting or a local AI.
+**Windows Explorer Drag-and-Drop**: You can also drag and drop any `config.json` file onto `sing-box-redact.exe` in Windows Explorer to automatically generate `config.redacted.json` in the same folder.
 
-It hides passwords, passphrases, UUID authentication identities, tokens, cookies, authorization headers, API credentials, private keys, PSKs, Reality short IDs, embedded URL credentials, obvious JWTs, private-key PEM, and paths that directly point to secret material. It mostly keeps endpoints, TLS SNI, public keys, ordinary usernames/hostnames, local paths, and route literals.
+---
 
-```powershell
-sing-box-redact.exe config.json --mode credentials
+## Disclosure Modes
+
+### 1. `share` (Default)
+
+Designed for sharing configurations with an AI, technical support person, or troubleshooting community.
+
+- **Redacted**: Passwords, tokens, private keys, PSKs, UUIDs, session cookies, authorization headers, real proxy/VPN server endpoints, non-Reality TLS `server_name`, `certificate_providers[].domain`, `tls.ech.config`, `reality.public_key`, WARP `reserved` bytes, user/host/device identities, local filesystem paths, interface identities, Wi-Fi SSID/BSSID, MAC addresses, and private source LAN CIDRs.
+- **Preserved**: Protocol types, inbound/outbound tags, ports, Reality camouflage SNI (e.g. `itunes.apple.com`), WARP peer public keys, TUN virtual interface stack (`tun.address`, `tun.dns_address`), public rule-set download URLs, transport paths, ALPN, multiplexing, congestion control, and routing actions.
+
+```bash
+sing-box-redact config.json
+sing-box-redact config.json --mode share
 ```
 
-### `share` (default)
+### 2. `credentials`
 
-Use when sending a configuration to an AI, friend, or technical support person.
+Designed for trusted internal debugging or local AI models when you only want to strip direct authentication secrets while keeping network topology visible.
 
-It includes credentials-mode protection and also hides real remote endpoints, authentication usernames, account/device/host identities, local filesystem paths, local interface and network identities, Wi-Fi/MAC data, and private source networks. It intentionally keeps protocol types, ports, TLS/Reality enablement, transport and DoH paths, network/multiplex/congestion settings, route/DNS ordering, rule actions, literal route domains/process names/packages, tags, and internal reference relationships.
+- **Redacted**: Passwords, passphrases, UUID authentication identities, tokens, session cookies, authorization headers, API credentials, private keys, PSKs, Reality short IDs, embedded URL credentials, obvious JWTs, and private-key PEM.
+- **Preserved**: Server endpoints, TLS SNIs, public keys, local paths, and rule literals.
 
-```powershell
-sing-box-redact.exe config.json
-sing-box-redact.exe config.json --mode share
+```bash
+sing-box-redact config.json --mode credentials
 ```
 
-### `strict`
+### 3. `strict`
 
-Use before posting to a public GitHub issue, forum, or chat group.
+Designed for posting to public GitHub issues, public forums, or open chat groups.
 
-It includes share-mode protection and additionally anonymizes TLS SNI, outbound ECH configuration, Reality/WireGuard/SSH public peer material, certificate and peer fingerprints, certificate content, route/DNS literal domains and IPs, process fields, package fields, user IDs, interface maps, DNS hosts, and custom/remote URLs. Sensitive object keys such as ShadowTLS SNI maps and DNS hosts maps are deterministically rewritten with collision checks.
+- **Redacted**: Everything in `share`, plus TLS SNIs (including Reality camouflage SNIs), public peer keys, peer/certificate fingerprints, certificate content, route/DNS literal domains, IP rules, process names/paths, package names, user IDs, custom URLs, DNS hosts object keys, and ShadowTLS SNI mapping object keys (deterministically rewritten with collision detection).
 
-```powershell
-sing-box-redact.exe config.json --mode strict
+```bash
+sing-box-redact config.json --mode strict
 ```
 
-## What remains visible
+---
 
-| Data | credentials | share | strict |
-|---|---:|---:|---:|
-| Password/token/cookie/private key/PSK/UUID/auth headers | hidden | hidden | hidden |
-| Proxy/VPN/DNS/NTP endpoint | visible | hidden | hidden |
-| Authentication username/device identity | hidden where used for auth | hidden | hidden |
-| TUN inbound address / virtual stack (`address`, `dns_address`, etc.) | visible | visible | hidden |
-| Local paths/interfaces/private networks | mostly visible, except secret paths | hidden | hidden |
-| Reality camouflage SNI / WireGuard public keys / public rule-set URLs | visible | visible | hidden |
-| Non-Reality TLS `server_name` / `certificate_providers[].domain` | visible | hidden | hidden |
-| `tls.ech.config` / `reality.public_key` / `reserved` | visible | hidden | hidden |
-| Route/DNS literal domains and IPs | visible | visible, except local identity | hidden |
-| Process/package rule literals | visible | visible, except process paths | hidden |
-| Tags, detours, selectors, rule-set and DNS references | visible | visible | visible |
-| Ports, protocol, transport, rule order, booleans, numbers | visible | visible | visible |
+## What Remains Visible
 
-## Examples
+| Field / Category | `credentials` | `share` (default) | `strict` |
+|---|:---:|:---:|:---:|
+| **Password / token / cookie / private key / PSK / UUID / auth headers** | 🔒 Hidden | 🔒 Hidden | 🔒 Hidden |
+| **Proxy / VPN / DNS / NTP remote server endpoint** | 👁️ Visible | 🔒 Hidden | 🔒 Hidden |
+| **Authentication username / device identity** | 🔒 Hidden | 🔒 Hidden | 🔒 Hidden |
+| **TUN inbound address & virtual stack (`address`, `dns_address`, etc.)** | 👁️ Visible | 👁️ Visible | 🔒 Hidden |
+| **Reality camouflage SNI / WARP public keys / public rule-set URLs** | 👁️ Visible | 👁️ Visible | 🔒 Hidden |
+| **Non-Reality TLS `server_name` / `certificate_providers[].domain`** | 👁️ Visible | 🔒 Hidden | 🔒 Hidden |
+| **`tls.ech.config` / `reality.public_key` / `reserved`** | 👁️ Visible | 🔒 Hidden | 🔒 Hidden |
+| **Local filesystem paths / interfaces / private networks** | 👁️ Visible | 🔒 Hidden | 🔒 Hidden |
+| **Route / DNS literal domains & IP CIDR rules** | 👁️ Visible | 👁️ Visible | 🔒 Hidden |
+| **Process & package rule names** | 👁️ Visible | 👁️ Visible | 🔒 Hidden |
+| **Tags, detours, selectors, rule-set & DNS references** | 👁️ Visible | 👁️ Visible | 👁️ Visible |
+| **Ports, protocol, transport, ALPN, multiplex, rule order, numbers, booleans** | 👁️ Visible | 👁️ Visible | 👁️ Visible |
 
-Default neighboring output:
+---
 
-```powershell
-sing-box-redact.exe config.json
-```
+## CLI Examples
 
-Explicit output:
+### Basic Usage
 
-```powershell
-sing-box-redact.exe config.json -o safe.json
-```
+```bash
+# Default neighboring output (config.redacted.json)
+sing-box-redact config.json
 
-JSON only on stdout; reports and diagnostics stay on stderr:
+# Explicit output file
+sing-box-redact config.json -o safe.json
 
-```powershell
-sing-box-redact.exe config.json --stdout > safe.json
-```
+# Print sanitized JSON directly to stdout
+sing-box-redact config.json --stdout > safe.json
 
-Read from stdin; stdin defaults to sanitized stdout when `-o` is absent:
-
-```powershell
+# Read from stdin
+cat config.json | sing-box-redact --stdin > safe.json
+# Windows PowerShell:
 Get-Content -Raw config.json | sing-box-redact.exe --stdin > safe.json
 ```
 
-Create a safe path-only report while also writing the sanitized file:
+### Reporting & Analysis
 
-```powershell
-sing-box-redact.exe config.json --report
+```bash
+# Print a safe category and JSON-path report to stderr while saving output
+sing-box-redact config.json --report
+
+# Analyze only (exit code 1 if sensitive data found; no file created)
+sing-box-redact config.json --check
 ```
 
-Analyze without writing:
+### Overwriting Existing Files
 
-```powershell
-sing-box-redact.exe config.json --check
+```bash
+# Explicitly replace an existing target file
+sing-box-redact config.json -o safe.json --force
 ```
 
-Replace an existing target explicitly:
+### Optional Gitleaks Audit
 
-```powershell
-sing-box-redact.exe config.json -o safe.json --force
+If [`gitleaks`](https://github.com/gitleaks/gitleaks) is installed on your machine and available in `PATH`:
+
+```bash
+sing-box-redact config.json --gitleaks
 ```
 
-Optional local Gitleaks pass, when `gitleaks` is already in `PATH`:
+---
 
-```powershell
-sing-box-redact.exe config.json --gitleaks
-```
-
-Gitleaks is never required for core redaction. Its stdout/stderr are discarded; only rule category and sanitized-file line number are reported. The temporary sanitized scan file and machine-readable report are deleted afterward.
-
-## Windows installation
-
-1. Copy `sing-box-redact.exe` to a local directory, for example `C:\Tools\sing-box-redact\`.
-2. Run it by full path, or add that directory to the user `PATH`.
-3. Keep the original configuration in a trusted location. The tool never modifies it.
-
-PowerShell may require unblocking an executable downloaded from a browser:
-
-```powershell
-Unblock-File .\sing-box-redact.exe
-```
-
-## Drag-and-drop usage
-
-Drag one `config.json` file from Windows Explorer onto `sing-box-redact.exe`. Explorer passes the file path as the sole positional argument. The tool creates `config.redacted.json` beside the source. If that target already exists, no file is overwritten; use a terminal with `--force` when replacement is intentional.
-
-## CLI flags
+## CLI Flags
 
 ```text
 -o, --output PATH       Write to PATH (default: <name>.redacted.json)
@@ -200,166 +189,101 @@ Drag one `config.json` file from Windows Explorer onto `sing-box-redact.exe`. Ex
     --stdin             Read configuration from stdin
     --mode MODE         credentials, share (default), or strict
     --report            Print redacted categories and JSON paths to stderr
-    --check             Analyze only; do not create a file
+    --check             Analyze only; do not create an output file
     --force             Atomically replace an existing output file
     --allow-suspicious  Write despite safe-path-only audit findings
-    --gitleaks          Run an optional local Gitleaks audit
--h, --help              Show help
-    --version           Show tool and policy versions
+    --gitleaks          Run optional local Gitleaks audit when installed
+-h, --help              Show this help
+    --version           Show tool and policy snapshot versions
 ```
 
-Flags can appear before or after the input path, matching the documented Windows examples.
+---
 
-## Output naming
+## Output Naming & Exit Codes
 
 - `config.json` becomes `config.redacted.json`.
 - `home-router.json` becomes `home-router.redacted.json`.
-- An extensionless input becomes `<name>.redacted.json`.
-- `--stdin` writes to stdout unless `-o` is supplied.
-- `--check` never writes a file.
-- `--force` is required to replace an existing destination.
-- The input path itself is rejected as an output path, even with `--force`.
+- `--stdin` writes to stdout unless `-o` is specified.
+- The input path itself is rejected as an output path to prevent accidental overwrites.
 
-## Report mode
-
-`--report` prints only category and JSON path to stderr:
-
-```text
-Redacted 4 values:
-ENDPOINT         $.outbounds[0].server
-CREDENTIAL       $.outbounds[0].uuid
-PRIVATE_KEY      $.endpoints[0].private_key
-PATH             $.experimental.cache_file.path
-```
-
-It never prints an original value, fragment, prefix, suffix, or hash. With `--stdout`, stdout remains JSON-only.
-
-## Check mode
-
-`--check` analyzes the selected disclosure mode without producing sanitized output:
-
-```text
-Credentials:   7
-Private keys:  2
-Endpoints:     4
-Identifiers:   3
-Paths:         2
-Suspicious:    0
-```
-
-Use it in scripts:
-
-```powershell
-sing-box-redact.exe config.json --mode strict --check
-if ($LASTEXITCODE -eq 1) { Write-Host "Sensitive data detected" }
-```
-
-## Exit codes
+### Exit Codes
 
 | Code | Meaning |
 |---:|---|
-| `0` | Success, or `--check` found nothing selected by the mode/audit |
-| `1` | `--check` found sensitive or suspicious data |
-| `2` | CLI, input, parse, policy, I/O, or optional Gitleaks runtime error |
-| `3` | Sanitized-output audit found residual/suspicious content and output was blocked |
+| `0` | Success, or `--check` found no sensitive data |
+| `1` | `--check` detected sensitive or suspicious data |
+| `2` | CLI flag error, input read failure, parse error, or runtime error |
+| `3` | Sanitized-output defense audit detected unredacted secrets (output blocked) |
 
-`--allow-suspicious` permits code-3 audit findings to be written after a warning. It does not change redaction policy.
+---
 
-## Defense-in-depth audit
+## Supported sing-box Version Snapshot
 
-After jq classification and Go replacement, the tool scans the sanitized tree for:
+Policy research target:
 
-- private-key PEM;
-- obvious JWTs;
-- Bearer/Basic authorization material;
-- URI userinfo and credential-like query parameters;
-- non-placeholder values under known credential fields;
-- common credential prefixes;
-- token-like high-entropy strings.
+- **Target Line**: sing-box `1.14.0 testing`
+- **Branch**: `testing`
+- **Commit**: [`df34f5068b961fe3390a61eb3e773ad9bf4d98e2`](https://github.com/SagerNet/sing-box/commit/df34f5068b961fe3390a61eb3e773ad9bf4d98e2)
+- **Policy Snapshot Date**: `2026-08-31`
+- **Official Schema**: [`docs/schema.json`](https://github.com/SagerNet/sing-box/blob/df34f5068b961fe3390a61eb3e773ad9bf4d98e2/docs/schema.json)
+- **Documentation**: <https://sing-box.sagernet.org/configuration/>
 
-The audit emits only category and JSON path. Known public cryptographic fields intentionally retained by `credentials`/`share`—including Reality/WireGuard public keys and outbound ECH config—are excluded from the generic high-entropy warning. Unknown high-entropy strings remain unchanged but block output by default; `--allow-suspicious` is explicit risk acceptance.
-
-## Updating the redaction policy
-
-For a new sing-box testing snapshot:
-
-1. Record the testing commit, release line, and schema date in `internal/app/app.go`, this README, and `docs/redaction-policy.md`.
-2. Diff official `docs/schema.json` and JSON struct tags under `option/`.
-3. Review inbound, outbound, endpoint, shared TLS/transport/HTTP, certificate providers, DNS, route/rule-set, services, and experimental options.
-4. Add every new credential, identity, private endpoint, local path/network, or strict fingerprint field to the policy table and jq context rules.
-5. Extend `testdata/all-sensitive.json` and the planted-secret lists.
-6. Run the complete verification commands below and inspect the built executable's report.
-
-Do not update metadata without reviewing the exact commit's schema and source.
-
-## Cross-platform and building from source
-
-The project is written in 100% pure Go with `CGO_ENABLED=0` and is fully cross-platform for **Windows**, **macOS** (Intel & Apple Silicon), and **Linux** (amd64, arm64, etc.).
-
-Requirements: Go 1.25 or newer.
-
-### Windows (PowerShell)
-
-```powershell
-go test -count=1 ./...
-go vet ./...
-
-New-Item -ItemType Directory -Force dist | Out-Null
-$env:CGO_ENABLED="0"
-$env:GOOS="windows"
-$env:GOARCH="amd64"
-
-go build `
-  -trimpath `
-  -ldflags="-s -w" `
-  -o dist\sing-box-redact.exe `
-  .\cmd\sing-box-redact
-```
-
-### macOS / Linux (Bash / Zsh)
+Check your compiled binary's snapshot:
 
 ```bash
+sing-box-redact --version
+```
+
+---
+
+## Building from Source
+
+Requires Go 1.25 or newer.
+
+```bash
+# Clone the repository
+git clone https://github.com/Star-Trails/sing-box-redact.git
+cd sing-box-redact
+
+# Run test suite and vet checks
 go test -count=1 ./...
 go vet ./...
 
-mkdir -p dist
-
-# Native build for current OS & Arch:
+# Build binary for your current platform
 CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o dist/sing-box-redact ./cmd/sing-box-redact
+```
 
-# Cross-compile for macOS (Apple Silicon M1/M2/M3/M4):
+### Cross-Compiling
+
+```bash
+# Windows (x86_64)
+CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o dist/sing-box-redact.exe ./cmd/sing-box-redact
+
+# macOS (Apple Silicon M1/M2/M3/M4)
 CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o dist/sing-box-redact-darwin-arm64 ./cmd/sing-box-redact
 
-# Cross-compile for macOS (Intel x86_64):
+# macOS (Intel x86_64)
 CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o dist/sing-box-redact-darwin-amd64 ./cmd/sing-box-redact
 
-# Cross-compile for Linux (amd64):
+# Linux (x86_64)
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o dist/sing-box-redact-linux-amd64 ./cmd/sing-box-redact
 
-# Cross-compile for Linux (arm64 / Raspberry Pi):
+# Linux (ARM64 / Raspberry Pi)
 CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o dist/sing-box-redact-linux-arm64 ./cmd/sing-box-redact
 ```
-## Security considerations
 
-- Original input is opened read-only and is never selected as a valid destination.
-- The program contains no network client and sends no configuration content over the network.
-- Session-local placeholder mappings are never persisted or reported.
-- Parser/runtime diagnostics do not include input excerpts.
-- Reports contain paths and categories only.
-- Existing output is not touched until parsing, redaction, audit, and serialization succeed.
-- `--force` uses Windows `MoveFileExW` with replace-existing and write-through flags after syncing the temporary file.
-- Non-force output uses an atomic same-volume hard-link commit, which cannot silently overwrite an existing name.
-- `--gitleaks` is optional and local; subprocess output is suppressed to prevent accidental secret echoing.
-- Reserved documentation address ranges and `.example` names are used, never arbitrary third-party addresses.
+---
 
-## Known limitations
+## Security & Privacy Design
 
-- Output is normalized to two-space JSON. Original whitespace and comments are not retained; object and array ordering are retained.
-- Duplicate object keys are rejected instead of guessing which duplicate sing-box would use.
-- The generic parser checks redaction safety but does not perform full sing-box schema validation or validate protocol-specific option combinations.
-- Unknown future fields are covered by normalized secret-key and content fallbacks, but ambiguous future fields still require a policy update.
-- Unknown high-entropy values can trigger the conservative output audit; inspect the path and use `--allow-suspicious` only when the field is intentionally public.
-- Strict URL replacement preserves only the documented sing-box documentation host allowlist. Credentials embedded in that allowlisted URL are still removed.
-- Tags are preserved. Global `--anonymize-tags` mapping is not implemented because incomplete tag/reference rewriting would be more dangerous than leaving the internal graph intact.
-- Input is limited to 64 MiB to bound memory use.
-- The optional Gitleaks integration targets the common Gitleaks v8 `detect --no-git` CLI contract; incompatible future CLI versions return exit code 2 without exposing subprocess output.
+- **Read-Only Input**: The input file is opened read-only and is never written to.
+- **No Network Activity**: The binary contains no HTTP client or networking code; nothing leaves your machine.
+- **Zero Secret Echoing**: Error messages, logs, and `--report` outputs display JSON paths and categories only, never value excerpts, prefixes, suffixes, or hashes.
+- **Safe Documentation Ranges**: Placeholders strictly use RFC 5737 (`192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24`), RFC 3849 (`2001:db8::/32`), and RFC 2606 (`.example`) ranges.
+- **Atomic Commits**: Output is written to a temporary file in the target directory, synced to disk, and committed atomically (`MoveFileExW` on Windows, POSIX `os.Rename` on Linux/macOS).
+
+---
+
+## License
+
+[MIT License](LICENSE) © 2026 Star-Trails
