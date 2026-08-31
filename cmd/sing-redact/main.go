@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/Star-Trails/sing-box-redact/internal/app"
+	"github.com/Star-Trails/sing-redact/internal/app"
 )
 
 func main() {

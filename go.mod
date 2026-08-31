@@ -1,4 +1,4 @@
-module github.com/Star-Trails/sing-box-redact
+module github.com/Star-Trails/sing-redact
 
 go 1.25.0
 

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Star-Trails/sing-box-redact/internal/jsonx"
-	"github.com/Star-Trails/sing-box-redact/internal/report"
+	"github.com/Star-Trails/sing-redact/internal/jsonx"
+	"github.com/Star-Trails/sing-redact/internal/report"
 	"github.com/itchyny/gojq"
 )
 

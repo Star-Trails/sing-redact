@@ -1,8 +1,8 @@
-# sing-box-redact
+# sing-redact
 
-`sing-box-redact` is a cross-platform CLI (Linux, macOS, Windows) that performs deterministic, structure-aware, local redaction of sing-box JSON configurations. It produces clean, sanitized JSON suitable for sharing with ChatGPT, Claude, Gemini, GitHub issues, technical forums, or colleagues for troubleshooting.
+`sing-redact` is a cross-platform CLI (Linux, macOS, Windows) that performs deterministic, structure-aware, local redaction of sing-box JSON configurations. It produces clean, sanitized JSON suitable for sharing with ChatGPT, Claude, Gemini, GitHub issues, technical forums, or colleagues for troubleshooting.
 
-**sing-box-redact is an independent community tool and is not affiliated with or endorsed by SagerNet or the sing-box project.**
+**sing-redact is an independent community tool and is not affiliated with or endorsed by SagerNet or the sing-box project.**
 
 ---
 
@@ -10,10 +10,10 @@
 
 ```bash
 # Linux / macOS
-sing-box-redact config.json
+sing-redact config.json
 
 # Windows
-sing-box-redact.exe config.json
+sing-redact.exe config.json
 ```
 
 This creates, without modifying the original configuration:
@@ -37,16 +37,16 @@ The executable:
 
 ## Supported Platforms & Pre-built Binaries
 
-Pre-compiled standalone binaries are available on the [GitHub Releases](https://github.com/Star-Trails/sing-box-redact/releases) page for:
+Pre-compiled standalone binaries are available on the [GitHub Releases](https://github.com/Star-Trails/sing-redact/releases) page for:
 
 | Platform | Architecture | Binary Package |
 |---|---|---|
-| **Linux** | `amd64` (x86_64) | `sing-box-redact-v*-linux-amd64.tar.gz` |
-| **Linux** | `arm64` (aarch64) | `sing-box-redact-v*-linux-arm64.tar.gz` |
-| **macOS** | `arm64` (Apple Silicon) | `sing-box-redact-v*-darwin-arm64.tar.gz` |
-| **macOS** | `amd64` (Intel x86_64) | `sing-box-redact-v*-darwin-amd64.tar.gz` |
-| **Windows** | `amd64` (x86_64) | `sing-box-redact-v*-windows-amd64.zip` |
-| **Windows** | `arm64` (ARM64) | `sing-box-redact-v*-windows-arm64.zip` |
+| **Linux** | `amd64` (x86_64) | `sing-redact-v*-linux-amd64.tar.gz` |
+| **Linux** | `arm64` (aarch64) | `sing-redact-v*-linux-arm64.tar.gz` |
+| **macOS** | `arm64` (Apple Silicon) | `sing-redact-v*-darwin-arm64.tar.gz` |
+| **macOS** | `amd64` (Intel x86_64) | `sing-redact-v*-darwin-amd64.tar.gz` |
+| **Windows** | `amd64` (x86_64) | `sing-redact-v*-windows-amd64.zip` |
+| **Windows** | `arm64` (ARM64) | `sing-redact-v*-windows-arm64.zip` |
 
 No Python, Node.js, Bash, WSL, MSYS2, or external libraries required at runtime. Each release is a single standalone executable.
 
@@ -60,21 +60,21 @@ Download the latest release for your architecture and place it in your `PATH`:
 
 ```bash
 # Example for Linux (x86_64)
-curl -sL https://github.com/Star-Trails/sing-box-redact/releases/latest/download/sing-box-redact-v0.1.0-linux-amd64.tar.gz | tar -xz
-sudo mv sing-box-redact /usr/local/bin/
+curl -sL https://github.com/Star-Trails/sing-redact/releases/latest/download/sing-redact-v0.1.0-linux-amd64.tar.gz | tar -xz
+sudo mv sing-redact /usr/local/bin/
 
 # Example for macOS (Apple Silicon)
-curl -sL https://github.com/Star-Trails/sing-box-redact/releases/latest/download/sing-box-redact-v0.1.0-darwin-arm64.tar.gz | tar -xz
-sudo mv sing-box-redact /usr/local/bin/
+curl -sL https://github.com/Star-Trails/sing-redact/releases/latest/download/sing-redact-v0.1.0-darwin-arm64.tar.gz | tar -xz
+sudo mv sing-redact /usr/local/bin/
 ```
 
 ### Windows
 
-1. Download `sing-box-redact-v*-windows-amd64.zip` from [Releases](https://github.com/Star-Trails/sing-box-redact/releases).
-2. Extract `sing-box-redact.exe` to any folder (e.g. `C:\Tools\`).
+1. Download `sing-redact-v*-windows-amd64.zip` from [Releases](https://github.com/Star-Trails/sing-redact/releases).
+2. Extract `sing-redact.exe` to any folder (e.g. `C:\Tools\`).
 3. Add that folder to your User `PATH` or run it directly.
 
-**Windows Explorer Drag-and-Drop**: You can also drag and drop any `config.json` file onto `sing-box-redact.exe` in Windows Explorer to automatically generate `config.redacted.json` in the same folder.
+**Windows Explorer Drag-and-Drop**: You can also drag and drop any `config.json` file onto `sing-redact.exe` in Windows Explorer to automatically generate `config.redacted.json` in the same folder.
 
 ---
 
@@ -88,8 +88,8 @@ Designed for sharing configurations with an AI, technical support person, or tro
 - **Preserved**: Protocol types, inbound/outbound tags, ports, Reality camouflage SNI (e.g. `itunes.apple.com`), WARP peer public keys, TUN virtual interface stack (`tun.address`, `tun.dns_address`), public rule-set download URLs, transport paths, ALPN, multiplexing, congestion control, and routing actions.
 
 ```bash
-sing-box-redact config.json
-sing-box-redact config.json --mode share
+sing-redact config.json
+sing-redact config.json --mode share
 ```
 
 ### 2. `credentials`
@@ -100,7 +100,7 @@ Designed for trusted internal debugging or local AI models when you only want to
 - **Preserved**: Server endpoints, TLS SNIs, public keys, local paths, and rule literals.
 
 ```bash
-sing-box-redact config.json --mode credentials
+sing-redact config.json --mode credentials
 ```
 
 ### 3. `strict`
@@ -110,7 +110,7 @@ Designed for posting to public GitHub issues, public forums, or open chat groups
 - **Redacted**: Everything in `share`, plus TLS SNIs (including Reality camouflage SNIs), public peer keys, peer/certificate fingerprints, certificate content, route/DNS literal domains, IP rules, process names/paths, package names, user IDs, custom URLs, DNS hosts object keys, and ShadowTLS SNI mapping object keys (deterministically rewritten with collision detection).
 
 ```bash
-sing-box-redact config.json --mode strict
+sing-redact config.json --mode strict
 ```
 
 ---
@@ -140,35 +140,35 @@ sing-box-redact config.json --mode strict
 
 ```bash
 # Default neighboring output (config.redacted.json)
-sing-box-redact config.json
+sing-redact config.json
 
 # Explicit output file
-sing-box-redact config.json -o safe.json
+sing-redact config.json -o safe.json
 
 # Print sanitized JSON directly to stdout
-sing-box-redact config.json --stdout > safe.json
+sing-redact config.json --stdout > safe.json
 
 # Read from stdin
-cat config.json | sing-box-redact --stdin > safe.json
+cat config.json | sing-redact --stdin > safe.json
 # Windows PowerShell:
-Get-Content -Raw config.json | sing-box-redact.exe --stdin > safe.json
+Get-Content -Raw config.json | sing-redact.exe --stdin > safe.json
 ```
 
 ### Reporting & Analysis
 
 ```bash
 # Print a safe category and JSON-path report to stderr while saving output
-sing-box-redact config.json --report
+sing-redact config.json --report
 
 # Analyze only (exit code 1 if sensitive data found; no file created)
-sing-box-redact config.json --check
+sing-redact config.json --check
 ```
 
 ### Overwriting Existing Files
 
 ```bash
 # Explicitly replace an existing target file
-sing-box-redact config.json -o safe.json --force
+sing-redact config.json -o safe.json --force
 ```
 
 ### Optional Gitleaks Audit
@@ -176,7 +176,7 @@ sing-box-redact config.json -o safe.json --force
 If [`gitleaks`](https://github.com/gitleaks/gitleaks) is installed on your machine and available in `PATH`:
 
 ```bash
-sing-box-redact config.json --gitleaks
+sing-redact config.json --gitleaks
 ```
 
 ---
@@ -231,7 +231,7 @@ Policy research target:
 Check your compiled binary's snapshot:
 
 ```bash
-sing-box-redact --version
+sing-redact --version
 ```
 
 ---
@@ -242,34 +242,34 @@ Requires Go 1.25 or newer.
 
 ```bash
 # Clone the repository
-git clone https://github.com/Star-Trails/sing-box-redact.git
-cd sing-box-redact
+git clone https://github.com/Star-Trails/sing-redact.git
+cd sing-redact
 
 # Run test suite and vet checks
 go test -count=1 ./...
 go vet ./...
 
 # Build binary for your current platform
-CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o dist/sing-box-redact ./cmd/sing-box-redact
+CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o dist/sing-redact ./cmd/sing-redact
 ```
 
 ### Cross-Compiling
 
 ```bash
 # Windows (x86_64)
-CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o dist/sing-box-redact.exe ./cmd/sing-box-redact
+CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o dist/sing-redact.exe ./cmd/sing-redact
 
 # macOS (Apple Silicon)
-CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o dist/sing-box-redact-darwin-arm64 ./cmd/sing-box-redact
+CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o dist/sing-redact-darwin-arm64 ./cmd/sing-redact
 
 # macOS (Intel x86_64)
-CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o dist/sing-box-redact-darwin-amd64 ./cmd/sing-box-redact
+CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o dist/sing-redact-darwin-amd64 ./cmd/sing-redact
 
 # Linux (x86_64)
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o dist/sing-box-redact-linux-amd64 ./cmd/sing-box-redact
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o dist/sing-redact-linux-amd64 ./cmd/sing-redact
 
 # Linux (ARM64)
-CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o dist/sing-box-redact-linux-arm64 ./cmd/sing-box-redact
+CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o dist/sing-redact-linux-arm64 ./cmd/sing-redact
 ```
 
 ---

@@ -11,7 +11,7 @@
         "path": "/dns-query",
         "headers": {
           "Authorization": "Bearer DNS_HEADER_SECRET",
-          "User-Agent": "sing-box-redact-test",
+          "User-Agent": "sing-redact-test",
           "Host": "resolver.private.example",
         },
       },

@@ -11,7 +11,7 @@ var ErrTargetExists = errors.New("output file already exists")
 
 func WriteAtomic(path string, content []byte, force bool) error {
 	directory := filepath.Dir(path)
-	temp, err := os.CreateTemp(directory, ".sing-box-redact-*.tmp")
+	temp, err := os.CreateTemp(directory, ".sing-redact-*.tmp")
 	if err != nil {
 		return fmt.Errorf("create output temp file: %w", err)
 	}

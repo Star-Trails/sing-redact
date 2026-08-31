@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Star-Trails/sing-box-redact/internal/jsonx"
+	"github.com/Star-Trails/sing-redact/internal/jsonx"
 )
 
 func sanitize(t *testing.T, input string, mode Mode) (*jsonx.Value, string) {

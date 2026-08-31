@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Star-Trails/sing-box-redact/internal/jsonx"
+	"github.com/Star-Trails/sing-redact/internal/jsonx"
 )
 
 func TestStdoutContainsOnlySanitizedJSON(t *testing.T) {
@@ -108,7 +108,7 @@ func TestVersionReportsExactPolicySnapshot(t *testing.T) {
 	if code := application.Run([]string{"--version"}); code != 0 {
 		t.Fatalf("version exit code = %d", code)
 	}
-	for _, expected := range []string{"sing-box-redact 0.1.0", "sing-box 1.14.0 testing", PolicyCommit[:12], PolicySchemaDate} {
+	for _, expected := range []string{"sing-redact 0.1.0", "sing-box 1.14.0 testing", PolicyCommit[:12], PolicySchemaDate} {
 		if !strings.Contains(stdout.String(), expected) {
 			t.Fatalf("version output lacks %q: %s", expected, stdout.String())
 		}

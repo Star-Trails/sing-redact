@@ -87,7 +87,7 @@ jobs:
             VERSION="${GITHUB_SHA::8}"
           fi
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "artifact=sing-box-redact-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}" >> "$GITHUB_OUTPUT"
+          echo "artifact=sing-redact-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}" >> "$GITHUB_OUTPUT"
 
       - name: Build Binary
         env:
@@ -96,15 +96,15 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
         run: |
           mkdir -p build
-          BIN_NAME="sing-box-redact${{ matrix.ext }}"
-          go build -trimpath -ldflags="-s -w" -o "build/${BIN_NAME}" ./cmd/sing-box-redact
+          BIN_NAME="sing-redact${{ matrix.ext }}"
+          go build -trimpath -ldflags="-s -w" -o "build/${BIN_NAME}" ./cmd/sing-redact
 
       - name: Package Artifact
         run: |
           cd build
           PACKAGE_NAME="${{ steps.meta.outputs.artifact }}"
           mkdir -p "${PACKAGE_NAME}"
-          cp "sing-box-redact${{ matrix.ext }}" "${PACKAGE_NAME}/"
+          cp "sing-redact${{ matrix.ext }}" "${PACKAGE_NAME}/"
           cp ../README.md "${PACKAGE_NAME}/" 2>/dev/null || true
           cp ../LICENSE "${PACKAGE_NAME}/" 2>/dev/null || true
           if [ "${{ matrix.archive }}" = "zip" ]; then

@@ -12,11 +12,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Star-Trails/sing-box-redact/internal/audit"
-	"github.com/Star-Trails/sing-box-redact/internal/jsonx"
-	"github.com/Star-Trails/sing-box-redact/internal/output"
-	"github.com/Star-Trails/sing-box-redact/internal/redact"
-	"github.com/Star-Trails/sing-box-redact/internal/report"
+	"github.com/Star-Trails/sing-redact/internal/audit"
+	"github.com/Star-Trails/sing-redact/internal/jsonx"
+	"github.com/Star-Trails/sing-redact/internal/output"
+	"github.com/Star-Trails/sing-redact/internal/redact"
+	"github.com/Star-Trails/sing-redact/internal/report"
 )
 
 const (
@@ -64,7 +64,7 @@ func (a *App) Run(arguments []string) int {
 		return 0
 	}
 	if options.version {
-		fmt.Fprintf(a.Stdout, "sing-box-redact %s\npolicy: %s / commit %s\npolicy date: %s\n", Version, PolicyVersion, PolicyCommit[:12], PolicySchemaDate)
+		fmt.Fprintf(a.Stdout, "sing-redact %s\npolicy: %s / commit %s\npolicy date: %s\n", Version, PolicyVersion, PolicyCommit[:12], PolicySchemaDate)
 		return 0
 	}
 	input, err := a.readInput(options)
@@ -296,14 +296,14 @@ func binaryName() string {
 		}
 	}
 	if runtime.GOOS == "windows" {
-		return "sing-box-redact.exe"
+		return "sing-redact.exe"
 	}
-	return "sing-box-redact"
+	return "sing-redact"
 }
 
 func writeUsage(writer io.Writer) {
 	bin := binaryName()
-	fmt.Fprintf(writer, `sing-box-redact - local, schema-aware sing-box configuration redaction
+	fmt.Fprintf(writer, `sing-redact - local, schema-aware sing-box configuration redaction
 
 Usage:
   %s config.json [options]
@@ -335,7 +335,7 @@ func runGitleaks(content []byte) ([]report.Finding, error) {
 	if err != nil {
 		return nil, errors.New("gitleaks was not found in PATH")
 	}
-	directory, err := os.MkdirTemp("", "sing-box-redact-gitleaks-*")
+	directory, err := os.MkdirTemp("", "sing-redact-gitleaks-*")
 	if err != nil {
 		return nil, err
 	}
