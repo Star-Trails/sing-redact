@@ -238,7 +238,7 @@ sing-redact --version
 
 ## Building from Source
 
-Requires Go 1.25 or newer.
+Requires Go 1.27 or newer.
 
 ```bash
 # Clone the repository
